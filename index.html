@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Running a six-agent AI org</title>
+<meta name="description" content="How I run six specialist AI agents, each owning one domain, coordinated through a task board and a shared read-only knowledge vault.">
+<style>
+:root{--bg:#0a0b0d;--card:#13161a;--line:#242a32;--fg:#e9ecf1;--mute:#8d95a3;
+--ok:#3ecf8e;--warn:#e0b341;--accent:#8b5cf6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+font:16px/1.65 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:72px 24px 96px}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.15;letter-spacing:-.02em;margin:0 0 14px}
+h2{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
+margin:56px 0 18px;font-weight:600}
+p{color:#c3cad6;margin:0 0 18px}
+.lede{font-size:19px;color:var(--mute);margin:0 0 10px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
+background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:36px 0 8px}
+.stat{background:var(--card);padding:22px 18px}
+.stat .n{font-size:30px;font-weight:650;letter-spacing:-.03em;line-height:1}
+.stat .l{color:var(--mute);font-size:12.5px;margin-top:7px}
+.grid{display:grid;gap:12px}
+.d{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:17px 19px}
+.d strong{display:block;margin-bottom:5px;font-size:15.5px}
+.d span{color:var(--mute);font-size:14.5px}
+.rule{display:grid;grid-template-columns:200px 1fr;gap:18px;padding:15px 0;
+border-top:1px solid var(--line)}
+.rule:last-child{border-bottom:1px solid var(--line)}
+.rule b{font-size:14.5px}
+.rule p{margin:0;font-size:14.5px;color:var(--mute)}
+@media(max-width:620px){.rule{grid-template-columns:1fr;gap:5px}}
+.strip{margin-top:64px;background:var(--card);border:1px solid var(--line);
+border-left:3px solid var(--warn);border-radius:9px;padding:20px 22px}
+.strip h3{margin:0 0 10px;font-size:14.5px}
+.strip ul{margin:0;padding-left:20px;color:var(--mute);font-size:14px}
+.strip li{margin-bottom:5px}
+code{background:#1b1f25;border:1px solid var(--line);border-radius:5px;
+padding:1px 6px;font-size:13px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);
+color:var(--mute);font-size:13.5px}
+</style></head><body><div class="wrap">
+
+<p class="lede">Notes on the system</p>
+<h1>Six AI agents, one per domain,<br>and the rules that keep them honest</h1>
+<p>I run a small portfolio of businesses &mdash; a trading system, client web work, a
+service business, a product &mdash; and I run a separate AI agent for each one. Not one
+assistant with a long prompt: six agents with separate memory, separate scheduled jobs and
+separate instructions. This page describes how it is put together and what I had to
+change once it was actually running.</p>
+
+<div class="stats">
+<div class="stat"><div class="n">6</div><div class="l">agents, one per domain</div></div>
+<div class="stat"><div class="n">116</div><div class="l">notes in shared memory</div></div>
+<div class="stat"><div class="n">4</div><div class="l">scheduled jobs</div></div>
+<div class="stat"><div class="n">4</div><div class="l">integrity gates, all passing</div></div>
+</div>
+
+<h2>The domains</h2>
+<div class="grid"><div class="d"><strong>Trading &amp; markets</strong><span>A live quantitative trading system, plus its research pipeline and public telemetry. The only domain with real money moving through it.</span></div><div class="d"><strong>Client services</strong><span>Website builds and delivery for small businesses, from brief to launch, including the proposal and invoicing paperwork.</span></div><div class="d"><strong>Local-service operations</strong><span>A family business: scheduling, lead generation and the automation that watches for the conditions worth calling about.</span></div><div class="d"><strong>Product &amp; directory</strong><span>A public directory product that refreshes itself nightly, testing every entry before it ships.</span></div><div class="d"><strong>Infrastructure</strong><span>The machines, domains and scheduled jobs everything else runs on. No revenue, and every other domain depends on it.</span></div><div class="d"><strong>Personal brand &amp; content</strong><span>Turning the whole thing into something legible to an audience. Mostly unwritten so far.</span></div></div>
+
+<h2>Rules that turned out to matter</h2>
+<div class="rule"><b>Own exactly one domain</b><p>Each agent stays inside its lane. When work belongs to another agent it says so and names which one, instead of improvising outside its context. Overlapping memory is how two agents quietly corrupt each other's state.</p></div><div class="rule"><b>Shared memory is read-only</b><p>Every agent reads one plain-markdown knowledge vault. Exactly one profile - the orchestrator - is allowed to write to it. Nothing is locked; the discipline is the lock. A shared write surface with six writers is a race condition with extra steps.</p></div><div class="rule"><b>Never fabricate</b><p>If a source is silent the agent writes <em>not established in the sources</em> and moves on. Numbers carry the date they were true. Assumptions are labelled as assumptions. A plausible-sounding invented figure is worse than a blank.</p></div><div class="rule"><b>Contradictions get tabulated, not resolved</b><p>When two sources disagree the agent writes both down and marks it unresolved. Silently picking a winner produces a confident answer that is wrong for whoever reads it next.</p></div><div class="rule"><b>Escalate only at hard walls</b><p>Passwords, phone codes, payments, someone's inbox. The agent logs the blocker, then keeps working on everything else. Nothing stops because one sub-task is stuck.</p></div><div class="rule"><b>Alerts must be switchable off</b><p>A watchdog re-reporting a known condition gets muted, and muting it is how the real outage is missed. These ones report transitions, not standing state.</p></div>
+
+<div class="strip">
+<h3>What is deliberately not on this page</h3>
+<ul>
+<li><b>Client names.</b> Not my call to make. A client did not agree to appear in my
+marketing, so every business I build for is described by category and nothing else.</li>
+<li><b>Any money.</b> No revenue, no invoices, no targets, no P&amp;L &mdash; in any form.
+Numbers without their dates are the easiest thing to misread.</li>
+<li><b>Infrastructure detail.</b> No registrars, expiries, addresses, hostnames or paths.
+Knowing where I keep things is a map of where to look.</li>
+<li><b>Anything from the vault itself.</b> This page is a generated summary sitting beside
+the knowledge base, not a window into it. The vault holds chat history, security notes and
+research on real people, and it is not published in any form.</li>
+</ul>
+</div>
+
+<footer>
+Generated 2026-10-25 from live system state by a script that refuses to write
+this file if any of the excluded categories above still appears in it.
+</footer>
+</div></body></html>
